@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+
+{% block title %}DegreeLabs Discover - Login & Role Selection{% endblock %}
+
+{% block login_content %}
+<div class="min-vh-100 d-flex align-items-center justify-content-center py-5"
+    style="background: radial-gradient(circle at 10% 20%, #0B132B 0%, #1C2541 60%, #0A1128 100%);">
+    <div class="container" style="max-width: 1000px;">
+        <div class="text-center mb-4 text-white">
+            <div class="d-inline-flex align-items-center gap-2 mb-2 px-3 py-1 rounded-pill"
+                style="background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.3);">
+                <span class="badge bg-info text-dark">4-Week Accelerator</span>
+                <span class="text-info small fw-bold">Student Capability Assessment Engine</span>
+            </div>
+            <h1 class="display-5 fw-bold mb-1" style="font-family: 'Outfit', sans-serif;">DegreeLabs <span
+                    class="text-info">Discover</span></h1>
+            <p class="text-light text-opacity-75 lead" style="font-size: 1.05rem;">
+                Enterprise Problem Solving &bull; 5-Member Student Teams &bull; Agentic AI Proposal Coach &bull;
+                Industry Shortlisting
+            </p>
+        </div>
+
+        <!-- Quick 1-Click Role Switcher Grid -->
+        <div class="card border-0 shadow-lg mb-4"
+            style="background: rgba(255, 255, 255, 0.04); backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 18px;">
+            <div class="card-body p-4">
+                <h5 class="text-white fw-bold mb-3 d-flex align-items-center gap-2">
+                    <i class="bi bi-person-badge text-info"></i> Instant Role Selection (1-Click Demo)
+                </h5>
+                <div class="row g-3">
+                    <!-- Student -->
+                    <div class="col-md-6 col-lg-3">
+                        <a href="{{ url_for('quick_login', role='student') }}"
+                            class="text-decoration-none h-100 d-block">
+                            <div class="p-3 rounded-3 h-100 text-center transition-card"
+                                style="background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(56, 189, 248, 0.3);">
+                                <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150"
+                                    class="avatar-img mb-2" alt="Student">
+                                <h6 class="text-white fw-bold mb-0">Aarav Sharma</h6>
+                                <span class="badge bg-info text-dark mb-2" style="font-size:0.7rem;">Student Lead</span>
+                                <p class="text-light text-opacity-75 small mb-0">Team Nexus Dynamics (Assigned Aurex
+                                    Retail Project)</p>
+                            </div>
+                        </a>
+                    </div>
+
+                    <!-- Mentor -->
+                    <div class="col-md-6 col-lg-3">
+                        <a href="{{ url_for('quick_login', role='mentor') }}"
+                            class="text-decoration-none h-100 d-block">
+                            <div class="p-3 rounded-3 h-100 text-center transition-card"
+                                style="background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(99, 102, 241, 0.3);">
+                                <img src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150"
+                                    class="avatar-img mb-2" alt="Mentor">
+                                <h6 class="text-white fw-bold mb-0">Dr. Maya Patel</h6>
+                                <span class="badge bg-primary text-white mb-2" style="font-size:0.7rem;">Industry
+                                    Mentor</span>
+                                <p class="text-light text-opacity-75 small mb-0">Principal Supply Chain AI Strategist &
+                                    Advisor</p>
+                            </div>
+                        </a>
+                    </div>
+
+                    <!-- Evaluator / Admin -->
+                    <div class="col-md-6 col-lg-3">
+                        <a href="{{ url_for('quick_login', role='evaluator') }}"
+                            class="text-decoration-none h-100 d-block">
+                            <div class="p-3 rounded-3 h-100 text-center transition-card"
+                                style="background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(16, 185, 129, 0.3);">
+                                <img src="https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150"
+                                    class="avatar-img mb-2" alt="Evaluator">
+                                <h6 class="text-white fw-bold mb-0">Sarah Jenkins</h6>
+                                <span class="badge bg-success text-white mb-2" style="font-size:0.7rem;">Evaluator /
+                                    Admin</span>
+                                <p class="text-light text-opacity-75 small mb-0">Internal Proposal Scoring, Shortlisting
+                                    & Readiness</p>
+                            </div>
+                        </a>
+                    </div>
+
+                    <!-- Company Reviewer -->
+                    <div class="col-md-6 col-lg-3">
+                        <a href="{{ url_for('quick_login', role='company_reviewer') }}"
+                            class="text-decoration-none h-100 d-block">
+                            <div class="p-3 rounded-3 h-100 text-center transition-card"
+                                style="background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(245, 158, 11, 0.3);">
+                                <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150"
+                                    class="avatar-img mb-2" alt="Company">
+                                <h6 class="text-white fw-bold mb-0">Vikram Malhotra</h6>
+                                <span class="badge bg-warning text-dark mb-2" style="font-size:0.7rem;">Company
+                                    Reviewer</span>
+                                <p class="text-light text-opacity-75 small mb-0">VP Product, Aurex Retail Analytics
+                                    (Single Winner Selection)</p>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Standard Credentials Login -->
+        <div class="card border-0 shadow" style="border-radius: 14px; background: #FFFFFF;">
+            <div class="card-body p-4">
+                <h6 class="fw-bold text-dark mb-3">Or sign in with username & password:</h6>
+                <form method="POST" action="{{ url_for('login') }}">
+                    <div class="row g-3 align-items-end">
+                        <div class="col-md-5">
+                            <label class="form-label small fw-semibold text-muted">Username</label>
+                            <input type="text" name="username" class="form-control"
+                                placeholder="e.g. aarav.student or sarah.evaluator" required>
+                        </div>
+                        <div class="col-md-5">
+                            <label class="form-label small fw-semibold text-muted">Password</label>
+                            <input type="password" name="password" class="form-control"
+                                placeholder="student123 / evaluator123 / mentor123 / company123" required>
+                        </div>
+                        <div class="col-md-2">
+                            <button type="submit" class="btn btn-dark w-100 fw-bold">Sign In</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="text-center mt-3 text-light text-opacity-50 small">
+            DegreeLabs Capability Framework &bull; Discover Phase MVP
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,181 @@
+{% extends "base.html" %}
+
+{% block title %}Student Dashboard - DegreeLabs Discover{% endblock %}
+
+{% block content %}
+<div class="page-header d-flex flex-wrap align-items-center justify-content-between gap-4 mb-4">
+    <div>
+        <div class="d-flex align-items-center gap-2 mb-2">
+            <span class="badge bg-primary text-white px-3 py-2 rounded-pill fw-semibold">Week {{ team.current_week }} of 4</span>
+            <span class="text-muted small fw-semibold">&bull; {{ team.name }}</span>
+        </div>
+        <h1 class="page-title mb-1">Welcome back, {{ current_user.full_name }}! 👋</h1>
+        <p class="page-subtitle mb-0">Track your team's Discover progress, weekly deliverables, upcoming sessions, and mentor engagements.</p>
+    </div>
+    <div class="d-flex gap-3">
+        <a href="{{ url_for('submission_view', week_num=team.current_week) }}" class="btn btn-primary shadow-sm px-4">
+            <i class="bi bi-file-earmark-text me-2"></i> Week {{ team.current_week }} Deliverable
+        </a>
+        <a href="{{ url_for('mentor_sessions') }}" class="btn btn-outline-dark px-3">
+            <i class="bi bi-calendar-event me-2"></i> Mentor Space
+        </a>
+    </div>
+</div>
+
+<!-- Next Action Banner -->
+{% if next_action %}
+<div class="card-custom border-primary border-2 mb-4 p-4" style="background: linear-gradient(90deg, #F0F9FF 0%, #FFFFFF 100%);">
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-4">
+        <div class="d-flex align-items-center gap-4">
+            <div class="p-3 bg-primary text-white rounded-3 shadow-sm d-flex align-items-center justify-content-center" style="width: 58px; height: 58px;">
+                <i class="bi bi-lightning-charge-fill fs-3"></i>
+            </div>
+            <div>
+                <span class="badge bg-primary text-white mb-2 px-2 py-1">Recommended Next Action</span>
+                <h5 class="fw-bold mb-1 text-dark">{{ next_action.title }}</h5>
+                <p class="text-muted small mb-0">{{ next_action.desc }}</p>
+            </div>
+        </div>
+        <a href="{{ next_action.link }}" class="btn btn-primary fw-bold px-4 py-2 shadow-sm">
+            {{ next_action.btn_text }} <i class="bi bi-arrow-right ms-2"></i>
+        </a>
+    </div>
+</div>
+{% endif %}
+
+<!-- 4-Week Milestone Progress Bar -->
+<div class="card-custom mb-5">
+    <div class="d-flex align-items-center justify-content-between mb-4 pb-2 border-bottom">
+        <div>
+            <h5 class="fw-bold mb-1">Discover 4-Week Program Progression</h5>
+            <p class="text-muted small mb-0">8+ hours weekly output commitment required from each team member.</p>
+        </div>
+        <span class="badge bg-light text-dark border px-3 py-2">Discover Cohort 2026</span>
+    </div>
+    
+    <div class="row g-4">
+        {% for w in weeks %}
+        {% set sub = submissions.get(w.week_number) %}
+        <div class="col-md-6 col-lg-3">
+            <div class="p-4 rounded-3 border h-100 position-relative d-flex flex-column transition-all {% if w.week_number == team.current_week %}border-primary bg-primary bg-opacity-10 shadow-sm{% elif sub and sub.status == 'shortlisted' %}border-success bg-success bg-opacity-10{% else %}bg-light{% endif %}">
+                <div class="d-flex align-items-center justify-content-between mb-3" style="min-height: 28px;">
+                    <span class="badge {% if w.week_number == team.current_week %}bg-primary{% elif sub and sub.status == 'shortlisted' %}bg-success{% else %}bg-secondary{% endif %} px-2.5 py-1 fw-semibold">
+                        Week {{ w.week_number }}
+                    </span>
+                    {% if sub %}
+                    <span class="status-pill {{ sub.status_badge_class }}" style="font-size: 0.72rem; padding: 0.28rem 0.6rem;">{{ sub.status }}</span>
+                    {% else %}
+                    <span class="status-pill badge-secondary" style="font-size: 0.72rem; padding: 0.28rem 0.6rem;">Upcoming</span>
+                    {% endif %}
+                </div>
+                <h6 class="fw-bold text-dark mb-2" style="font-size: 0.96rem; min-height: 44px; display: flex; align-items: center; line-height: 1.35;">{{ w.title }}</h6>
+                <p class="text-muted small mb-3 flex-grow-1" style="min-height: 48px; line-height: 1.45; font-size: 0.84rem;">{{ w.required_output_title }}</p>
+                <div class="mt-auto pt-3 border-top">
+                    <a href="{{ url_for('week_detail', week_num=w.week_number) }}" class="small fw-bold text-primary text-decoration-none d-flex align-items-center justify-content-between">
+                        <span>View Sessions</span>
+                        <i class="bi bi-chevron-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Left Column: Assigned Project Overview -->
+    <div class="col-lg-7">
+        <div class="card-custom h-100">
+            <div class="d-flex align-items-center justify-content-between mb-4 pb-2 border-bottom">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="badge bg-dark text-white px-3 py-1">Assigned Project</span>
+                    <span class="text-muted small">&bull; Non-elective assignment</span>
+                </div>
+                <a href="{{ url_for('project_detail') }}" class="small fw-bold text-primary text-decoration-none">
+                    Full Problem Spec <i class="bi bi-box-arrow-up-right ms-1"></i>
+                </a>
+            </div>
+
+            <div class="d-flex align-items-start gap-4 mb-4">
+                <img src="{{ team.project.company.logo_url }}" class="rounded-3 border shadow-sm" style="width: 68px; height: 68px; object-fit: cover;" alt="Company Logo">
+                <div>
+                    <h5 class="fw-bold text-dark mb-2">{{ team.project.title }}</h5>
+                    <div class="d-flex flex-wrap gap-2">
+                        <span class="badge bg-light text-dark border">{{ team.project.company.name }}</span>
+                        <span class="badge bg-light text-secondary border">{{ team.project.company.industry }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-4 bg-light rounded-3 mb-4 border">
+                <div class="fw-bold text-dark small mb-2">Company Problem Statement:</div>
+                <p class="text-muted small mb-0 lh-lg" style="display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden;">
+                    {{ team.project.problem_statement }}
+                </p>
+            </div>
+
+            <div class="row g-3 text-center">
+                <div class="col-4">
+                    <div class="p-3 border rounded-3 bg-white shadow-sm">
+                        <div class="small text-muted mb-1">Sessions Done</div>
+                        <div class="h5 fw-bold text-dark mb-0">{{ completed_sessions }} / 12</div>
+                    </div>
+                </div>
+                <div class="col-4">
+                    <div class="p-3 border rounded-3 bg-white shadow-sm">
+                        <div class="small text-muted mb-1">Outputs Logged</div>
+                        <div class="h5 fw-bold text-success mb-0">{{ submissions|length }} / 4</div>
+                    </div>
+                </div>
+                <div class="col-4">
+                    <div class="p-3 border rounded-3 bg-white shadow-sm">
+                        <div class="small text-muted mb-1">Assigned Mentor</div>
+                        <div class="h6 fw-bold text-primary mb-0 text-truncate">{{ team.mentor.full_name if team.mentor else "Assigned" }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Column: Upcoming Sessions & Schedule -->
+    <div class="col-lg-5">
+        <div class="card-custom h-100">
+            <div class="d-flex align-items-center justify-content-between mb-4 pb-2 border-bottom">
+                <h5 class="fw-bold mb-0">Upcoming Sessions</h5>
+                <span class="badge bg-info text-dark">Live & Working</span>
+            </div>
+
+            {% if upcoming_sessions %}
+            <div class="list-group list-group-flush">
+                {% for s in upcoming_sessions %}
+                <div class="list-group-item px-0 py-3 border-bottom">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <span class="badge {% if s.session_type == 'learning' %}bg-primary{% else %}bg-warning text-dark{% endif %}">
+                            Session {{ s.session_number }} &bull; {{ s.session_type.title() }}
+                        </span>
+                        <span class="text-muted small"><i class="bi bi-clock me-1"></i>{{ s.scheduled_at }}</span>
+                    </div>
+                    <h6 class="fw-bold text-dark mb-1" style="font-size: 0.95rem;">{{ s.title }}</h6>
+                    <p class="text-muted small mb-3 lh-base">{{ s.description }}</p>
+                    <a href="{{ s.mock_meeting_link }}" target="_blank" class="btn btn-sm btn-outline-primary fw-semibold">
+                        <i class="bi bi-camera-video me-1"></i> Join Meeting Room
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center py-5 text-muted">
+                <i class="bi bi-calendar-check fs-2"></i>
+                <p class="small mt-2 mb-0">All cohort sessions completed for current phase.</p>
+            </div>
+            {% endif %}
+
+            <div class="mt-4 text-center">
+                <a href="{{ url_for('timeline') }}" class="small fw-bold text-primary text-decoration-none">
+                    View Complete 12-Session Schedule <i class="bi bi-arrow-right ms-1"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

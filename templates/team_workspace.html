@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+
+{% block title %}Team Workspace - DegreeLabs Discover{% endblock %}
+
+{% block content %}
+<div class="page-header d-flex flex-wrap align-items-center justify-content-between gap-4 mb-4">
+    <div>
+        <div class="d-flex align-items-center gap-2 mb-2">
+            <span class="badge bg-primary text-white px-3 py-2 rounded-pill fw-semibold">5-Member Team</span>
+            <span class="text-muted small">&bull; Multi-disciplinary Cohort</span>
+        </div>
+        <h1 class="page-title mb-1">{{ team.name }} Workspace</h1>
+        <p class="page-subtitle mb-0">Collaborative research scratchpad, member roster across disciplines, mentor engagements, and deliverables log.</p>
+    </div>
+    <div class="d-flex gap-3">
+        <a href="{{ url_for('mentor_sessions') }}" class="btn btn-outline-dark px-3">
+            <i class="bi bi-person-video3 me-2"></i> Request Mentor Slot
+        </a>
+        <a href="{{ url_for('submission_view', week_num=team.current_week) }}" class="btn btn-primary px-4 shadow-sm">
+            <i class="bi bi-file-earmark-arrow-up me-2"></i> Week {{ team.current_week }} Output
+        </a>
+    </div>
+</div>
+
+<!-- 5-Member Team Roster -->
+<div class="card-custom mb-5">
+    <div class="d-flex align-items-center justify-content-between mb-4 pb-2 border-bottom">
+        <h5 class="fw-bold mb-0 d-flex align-items-center gap-2">
+            <i class="bi bi-people-fill text-primary"></i> Team Composition (5 Cross-Functional Disciplines)
+        </h5>
+        <span class="badge bg-light text-dark border px-3 py-2">Cohort 2026</span>
+    </div>
+
+    <div class="row g-4">
+        {% for m in team.members %}
+        <div class="col-md-6 col-lg">
+            <div class="p-4 border rounded-3 bg-light text-center h-100 position-relative shadow-sm d-flex flex-column align-items-center">
+                <img src="{{ m.user.avatar_url or 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150' }}" class="avatar-img mb-3" alt="{{ m.user.full_name }}">
+                <h6 class="fw-bold text-dark mb-1">{{ m.user.full_name }}</h6>
+                <div class="badge bg-primary text-white mb-2 px-2 py-1" style="font-size:0.72rem;">{{ m.role_in_team }}</div>
+                <div class="text-muted small mt-auto" style="font-size:0.8rem;">{{ m.user.discipline }}</div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Left Column: Collaborative Team Scratchpad -->
+    <div class="col-lg-7">
+        <div class="card-custom h-100">
+            <div class="d-flex align-items-center justify-content-between mb-4 pb-2 border-bottom">
+                <div>
+                    <h5 class="fw-bold mb-1 d-flex align-items-center gap-2">
+                        <i class="bi bi-journal-code text-primary"></i> Live Team Scratchpad (Week {{ team.current_week }})
+                    </h5>
+                    <span class="text-muted small">Collaborative workspace for research notes, data schemas, and draft hypotheses.</span>
+                </div>
+                {% if scratchpad and scratchpad.updated_by_name %}
+                <span class="badge bg-light text-secondary border px-3 py-2">Last edited by {{ scratchpad.updated_by_name }}</span>
+                {% endif %}
+            </div>
+
+            <form method="POST" action="{{ url_for('save_scratchpad') }}">
+                <input type="hidden" name="week_number" value="{{ team.current_week }}">
+                <div class="mb-4">
+                    <textarea name="content" class="form-control font-monospace p-3" rows="14" style="font-size: 0.92rem; line-height: 1.6; background: #FAFBFD;" placeholder="Draft hypothesis notes, calculation formulas, and team ideas here...">{{ scratchpad.content if scratchpad else '' }}</textarea>
+                </div>
+                <div class="d-flex justify-content-between align-items-center pt-2">
+                    <span class="text-muted small"><i class="bi bi-info-circle me-1"></i> Visible to all 5 team members and assigned mentor.</span>
+                    <button type="submit" class="btn btn-primary px-4 shadow-sm">
+                        <i class="bi bi-save me-2"></i> Save Scratchpad
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Right Column: Mentor Feed & Submission History -->
+    <div class="col-lg-5">
+        <!-- Assigned Mentor Card -->
+        <div class="card-custom mb-4">
+            <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom">
+                <h5 class="fw-bold text-dark mb-0 fs-6">Assigned Team Mentor</h5>
+                <span class="badge bg-success text-white px-2.5 py-1">Active</span>
+            </div>
+
+            {% if team.mentor %}
+            <div class="d-flex align-items-center gap-3 p-3 bg-light rounded-3 mb-4 border">
+                <img src="{{ team.mentor.avatar_url or 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150' }}" class="avatar-img flex-shrink-0" style="width: 52px; height: 52px;" alt="{{ team.mentor.full_name }}">
+                <div class="overflow-hidden" style="min-width: 0;">
+                    <h6 class="fw-bold text-dark mb-0.5 fs-6 text-truncate">{{ team.mentor.full_name }}</h6>
+                    <div class="text-primary small fw-semibold mb-0.5 text-truncate" style="font-size: 0.82rem;">{{ team.mentor.discipline }}</div>
+                    <div class="text-muted small text-truncate" style="font-size: 0.78rem;">{{ team.mentor.email }}</div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Mentor Notes Feed -->
+            <h6 class="fw-bold text-dark small mb-3">Mentor Session Feedback & Guidance:</h6>
+            {% if session_requests %}
+            <div class="list-group list-group-flush mb-4">
+                {% for req in session_requests %}
+                {% if req.mentor_notes %}
+                <div class="list-group-item px-0 py-3 border-bottom">
+                    <div class="d-flex align-items-start justify-content-between gap-2 mb-2">
+                        <span class="badge bg-primary text-wrap text-start lh-sm px-2.5 py-1.5 fw-semibold" style="max-width: 76%; font-size: 0.76rem; word-break: break-word; white-space: normal;">{{ req.topic }}</span>
+                        <span class="text-muted small text-nowrap flex-shrink-0" style="font-size: 0.75rem;"><i class="bi bi-calendar-event me-1"></i>{{ req.responded_at.strftime('%b %d') if req.responded_at else 'Recent' }}</span>
+                    </div>
+                    <p class="text-dark small mb-0 fst-italic p-3 bg-light rounded-3 border-start border-4 border-primary lh-base" style="font-size: 0.86rem;">
+                        "{{ req.mentor_notes }}"
+                    </p>
+                </div>
+                {% endif %}
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="text-muted small mb-4">No mentor notes logged yet.</p>
+            {% endif %}
+
+            <a href="{{ url_for('mentor_sessions') }}" class="btn btn-outline-primary w-100 fw-semibold py-2">
+                <i class="bi bi-calendar-plus me-2"></i> Book Guidance Session
+            </a>
+        </div>
+
+        <!-- Team Submission History -->
+        <div class="card-custom">
+            <h5 class="fw-bold text-dark mb-3 pb-2 border-bottom fs-6">Team Output History</h5>
+            {% if submissions %}
+            <div class="list-group list-group-flush">
+                {% for sub in submissions %}
+                <div class="list-group-item px-0 py-3 d-flex align-items-center justify-content-between gap-2 border-bottom">
+                    <div class="overflow-hidden pe-2" style="min-width: 0;">
+                        <div class="fw-bold text-dark small text-truncate" title="Week {{ sub.week_number }}: {{ sub.title }}">Week {{ sub.week_number }}: {{ sub.title }}</div>
+                        <div class="text-muted" style="font-size:0.78rem;">
+                            {% if sub.submitted_at %}Submitted on {{ sub.submitted_at.strftime('%b %d, %Y') }}{% else %}Draft in progress{% endif %}
+                        </div>
+                    </div>
+                    <div class="flex-shrink-0">
+                        <span class="status-pill {{ sub.status_badge_class }}" style="font-size: 0.72rem; padding: 0.3rem 0.65rem;">{{ sub.status }}</span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="text-muted small mb-0">No submissions found.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

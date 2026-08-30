@@ -1,0 +1,258 @@
+{% extends "base.html" %}
+
+{% block title %}Evaluation & Shortlisting Dashboard - DegreeLabs Discover{% endblock %}
+
+{% block content %}
+<div class="page-header d-flex flex-wrap align-items-center justify-content-between gap-4 mb-4">
+    <div>
+        <div class="d-flex align-items-center gap-2 mb-2">
+            <span class="badge bg-success text-white px-3 py-2 rounded-pill fw-semibold"><i class="bi bi-shield-lock-fill me-1"></i>Internal Evaluator Portal</span>
+            <span class="text-muted small">&bull; Pre-Company Quality Gate</span>
+        </div>
+        <h1 class="page-title mb-1">Evaluation & Shortlisting Dashboard</h1>
+        <p class="page-subtitle mb-0">Review student team deliverables, compare human rubric scores with AI Coach readiness scores, and shortlist outputs for company presentation.</p>
+    </div>
+</div>
+
+<!-- Evaluation Metrics Overview -->
+<div class="row g-4 mb-4">
+    <div class="col-md-6 col-lg-3">
+        <div class="card-custom text-center p-4 mb-0">
+            <div class="text-muted small fw-bold text-uppercase tracking-wider mb-1">Total Submissions</div>
+            <div class="display-5 fw-bold text-dark">{{ total_submissions }}</div>
+        </div>
+    </div>
+    <div class="col-md-6 col-lg-3">
+        <div class="card-custom text-center p-4 mb-0 border-info">
+            <div class="text-info small fw-bold text-uppercase tracking-wider mb-1">Awaiting Evaluation</div>
+            <div class="display-5 fw-bold text-info">{{ submitted_count }}</div>
+        </div>
+    </div>
+    <div class="col-md-6 col-lg-3">
+        <div class="card-custom text-center p-4 mb-0 border-primary">
+            <div class="text-primary small fw-bold text-uppercase tracking-wider mb-1">Evaluated</div>
+            <div class="display-5 fw-bold text-primary">{{ evaluated_count }}</div>
+        </div>
+    </div>
+    <div class="col-md-6 col-lg-3">
+        <div class="card-custom text-center p-4 mb-0 border-success">
+            <div class="text-success small fw-bold text-uppercase tracking-wider mb-1">Shortlisted for Company</div>
+            <div class="display-5 fw-bold text-success">{{ shortlisted_count }}</div>
+        </div>
+    </div>
+</div>
+
+<!-- Pipeline Stage Visualizer -->
+<div class="card-custom mb-5">
+    <h6 class="fw-bold text-dark mb-3">Internal Quality Gate Pipeline:</h6>
+    <div class="d-flex flex-wrap align-items-center gap-3 py-2">
+        <span class="status-pill badge-secondary px-3 py-2">1. Assigned</span>
+        <i class="bi bi-arrow-right text-muted"></i>
+        <span class="status-pill badge-warning px-3 py-2">2. Working</span>
+        <i class="bi bi-arrow-right text-muted"></i>
+        <span class="status-pill badge-info px-3 py-2">3. Submitted</span>
+        <i class="bi bi-arrow-right text-muted"></i>
+        <span class="status-pill badge-primary px-3 py-2">4. Evaluated</span>
+        <i class="bi bi-arrow-right text-muted"></i>
+        <span class="status-pill badge-success px-3 py-2">5. Shortlisted</span>
+        <i class="bi bi-arrow-right text-muted"></i>
+        <span class="status-pill badge-purple px-3 py-2">6. Next Phase (Validate Wks 5–8)</span>
+    </div>
+</div>
+
+<!-- Submissions Evaluation Table -->
+<div class="card-custom">
+    <div class="d-flex align-items-center justify-content-between mb-4 pb-2 border-bottom">
+        <div>
+            <h5 class="fw-bold mb-1">Cohort Deliverables Pipeline</h5>
+            <span class="text-muted small">Only shortlisted proposals are transmitted to company reviewers.</span>
+        </div>
+        <span class="badge bg-light text-dark border px-3 py-2">Quality Control</span>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th class="py-3">Week</th>
+                    <th class="py-3">Team & Deliverable Title</th>
+                    <th class="py-3">Status</th>
+                    <th class="py-3">AI Suggested Readiness</th>
+                    <th class="py-3">Human Score</th>
+                    <th class="py-3">Evaluator Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for sub in submissions %}
+                <tr>
+                    <td>
+                        <span class="badge bg-dark px-2 py-1">Week {{ sub.week_number }}</span>
+                    </td>
+                    <td>
+                        <div class="fw-bold text-dark fs-6">{{ sub.title }}</div>
+                        <div class="text-muted small">{{ sub.team.name }} &bull; Assigned: <strong>{{ sub.team.project.company.name }}</strong></div>
+                    </td>
+                    <td>
+                        <span class="status-pill {{ sub.status_badge_class }}">{{ sub.status }}</span>
+                    </td>
+                    <td>
+                        {% if sub.ai_feedback %}
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="badge bg-info text-dark fw-bold px-3 py-2 fs-6">{{ sub.ai_feedback.readiness_score }} / 100</span>
+                            <span class="text-muted small" title="AI Coach evaluated based on week rubric"><i class="bi bi-robot"></i></span>
+                        </div>
+                        {% else %}
+                        <span class="text-muted small fst-italic">Pending AI Run</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if sub.human_evaluation %}
+                        <span class="badge bg-primary text-white fw-bold px-3 py-2 fs-6">{{ sub.human_evaluation.score }} / 100</span>
+                        {% else %}
+                        <span class="badge bg-light text-secondary border px-3 py-2">Unscored</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-sm btn-primary fw-semibold px-3" data-bs-toggle="modal" data-bs-target="#evalModal{{ sub.id }}">
+                                <i class="bi bi-clipboard-check me-1"></i> Review & Score
+                            </button>
+
+                            <form method="POST" action="{{ url_for('quick_shortlist_toggle', submission_id=sub.id) }}" class="d-inline">
+                                {% if sub.status != 'shortlisted' %}
+                                <button type="submit" name="action" value="shortlist" class="btn btn-sm btn-outline-success px-3" title="Quick Shortlist">
+                                    <i class="bi bi-check-circle me-1"></i> Shortlist
+                                </button>
+                                {% else %}
+                                <button type="submit" name="action" value="reject" class="btn btn-sm btn-outline-danger px-3" title="Revoke Shortlist">
+                                    <i class="bi bi-x-circle me-1"></i> Reject
+                                </button>
+                                {% endif %}
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+
+                <!-- Comprehensive Review & Scoring Modal -->
+                <div class="modal fade" id="evalModal{{ sub.id }}" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered modal-xl">
+                        <div class="modal-content border-0 shadow-lg" style="border-radius: 18px; overflow: hidden;">
+                            <div class="modal-header bg-dark text-white p-4">
+                                <div>
+                                    <span class="badge bg-info text-dark me-2 px-2 py-1">Week {{ sub.week_number }}</span>
+                                    <h5 class="modal-title d-inline fw-bold">{{ sub.title }}</h5>
+                                </div>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body p-4 bg-light">
+                                <div class="row g-4">
+                                    <!-- Left: Student Submission & AI Coach Comparison -->
+                                    <div class="col-lg-7">
+                                        <div class="p-4 bg-white rounded-3 border mb-4 shadow-sm">
+                                            <h6 class="fw-bold text-dark mb-2">Executive Summary:</h6>
+                                            <p class="small text-muted mb-4 lh-base">{{ sub.executive_summary or 'No executive summary provided.' }}</p>
+
+                                            <h6 class="fw-bold text-dark mb-2">Proposal Content:</h6>
+                                            <div class="p-3 bg-light rounded-3 font-monospace small mb-4 lh-base" style="max-height: 280px; overflow-y: auto; white-space: pre-line;">
+                                                {{ sub.content or 'No text content drafted.' }}
+                                            </div>
+
+                                            {% if sub.file_attachment_name %}
+                                            <div class="p-3 border rounded-3 bg-light small">
+                                                <i class="bi bi-paperclip text-primary me-2"></i> Attachment: 
+                                                <a href="{{ sub.file_attachment_path }}" target="_blank" class="fw-bold text-primary">{{ sub.file_attachment_name }}</a>
+                                            </div>
+                                            {% endif %}
+                                        </div>
+
+                                        <!-- AI Coach Side-by-Side Card -->
+                                        {% if sub.ai_feedback %}
+                                        <div class="p-4 rounded-3 border bg-dark text-white shadow-sm">
+                                            <div class="d-flex align-items-center justify-content-between mb-3 border-bottom border-secondary border-opacity-50 pb-2">
+                                                <div class="small fw-bold text-info"><i class="bi bi-robot me-2"></i> AI Coach Suggested Readiness:</div>
+                                                <span class="badge bg-info text-dark fw-bold fs-6">{{ sub.ai_feedback.readiness_score }} / 100</span>
+                                            </div>
+                                            <p class="small text-light text-opacity-90 mb-3 lh-base">{{ sub.ai_feedback.raw_summary }}</p>
+
+                                            <div class="small fw-bold text-warning mb-2">Identified Gaps:</div>
+                                            <ul class="small list-unstyled mb-0 text-warning">
+                                                {% for g in sub.ai_feedback.gaps %}
+                                                <li class="mb-1">&bull; {{ g }}</li>
+                                                {% endfor %}
+                                            </ul>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+
+                                    <!-- Right: Human Evaluator Scoring Form -->
+                                    <div class="col-lg-5">
+                                        <div class="p-4 bg-white rounded-3 border shadow-sm">
+                                            <h6 class="fw-bold text-dark mb-4 pb-2 border-bottom"><i class="bi bi-pencil-square text-primary me-2"></i> Evaluator Scoring Form</h6>
+
+                                            <form method="POST" action="{{ url_for('evaluate_submission', submission_id=sub.id) }}">
+                                                <div class="mb-4">
+                                                    <label class="form-label small fw-bold text-dark">Overall Human Score (0-100)</label>
+                                                    <input type="number" name="score" class="form-control form-control-lg fw-bold text-primary" min="0" max="100" value="{{ sub.human_evaluation.score if sub.human_evaluation else 88 }}" required>
+                                                </div>
+
+                                                <div class="row g-3 mb-4">
+                                                    <div class="col-6">
+                                                        <label class="form-label small fw-semibold">Problem Clarity</label>
+                                                        <input type="number" name="criteria_problem_clarity" class="form-control form-control-sm" min="0" max="100" value="90">
+                                                    </div>
+                                                    <div class="col-6">
+                                                        <label class="form-label small fw-semibold">Methodology Rigor</label>
+                                                        <input type="number" name="criteria_methodology_rigor" class="form-control form-control-sm" min="0" max="100" value="85">
+                                                    </div>
+                                                    <div class="col-6">
+                                                        <label class="form-label small fw-semibold">Feasibility</label>
+                                                        <input type="number" name="criteria_feasibility" class="form-control form-control-sm" min="0" max="100" value="85">
+                                                    </div>
+                                                    <div class="col-6">
+                                                        <label class="form-label small fw-semibold">Presentation</label>
+                                                        <input type="number" name="criteria_presentation" class="form-control form-control-sm" min="0" max="100" value="90">
+                                                    </div>
+                                                </div>
+
+                                                <div class="mb-4">
+                                                    <label class="form-label small fw-bold text-dark">Decision Verdict</label>
+                                                    <select name="decision" class="form-select fw-semibold">
+                                                        <option value="shortlisted" {% if sub.status == 'shortlisted' %}selected{% endif %}>✅ Shortlist for Company Review</option>
+                                                        <option value="evaluated" {% if sub.status == 'evaluated' %}selected{% endif %}>📝 Evaluated (Internal Hold)</option>
+                                                        <option value="rejected" {% if sub.status == 'rejected' %}selected{% endif %}>❌ Reject / Request Revision</option>
+                                                    </select>
+                                                </div>
+
+                                                <div class="mb-3">
+                                                    <label class="form-label small fw-semibold">Key Strengths</label>
+                                                    <textarea name="strengths" class="form-control form-control-sm" rows="2" placeholder="Exceptional problem breakdown...">{{ sub.human_evaluation.strengths if sub.human_evaluation else '' }}</textarea>
+                                                </div>
+
+                                                <div class="mb-3">
+                                                    <label class="form-label small fw-semibold">Weaknesses / Gaps</label>
+                                                    <textarea name="weaknesses" class="form-control form-control-sm" rows="2" placeholder="Needs more focus on cold-start SKUs...">{{ sub.human_evaluation.weaknesses if sub.human_evaluation else '' }}</textarea>
+                                                </div>
+
+                                                <div class="mb-4">
+                                                    <label class="form-label small fw-semibold">Recommendation Notes</label>
+                                                    <textarea name="recommendation_notes" class="form-control form-control-sm" rows="2" placeholder="Approved for company presentation pipeline...">{{ sub.human_evaluation.recommendation_notes if sub.human_evaluation else '' }}</textarea>
+                                                </div>
+
+                                                <div class="d-flex justify-content-end gap-3 pt-2">
+                                                    <button type="button" class="btn btn-secondary px-3" data-bs-dismiss="modal">Cancel</button>
+                                                    <button type="submit" class="btn btn-primary px-4 fw-bold shadow-sm">Save Evaluation</button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,235 @@
+{% extends "base.html" %}
+
+{% block title %}Week {{ week.week_number }} Output & AI Coach - DegreeLabs Discover{% endblock %}
+
+{% block content %}
+<div class="page-header d-flex flex-wrap align-items-center justify-content-between gap-4 mb-4">
+    <div>
+        <div class="d-flex align-items-center gap-2 mb-2">
+            <span class="badge bg-primary text-white px-3 py-2 rounded-pill fw-semibold">Week {{ week.week_number }} Deliverable</span>
+            <span class="status-pill {{ submission.status_badge_class }}">{{ submission.status }}</span>
+        </div>
+        <h1 class="page-title mb-1">{{ week.required_output_title }}</h1>
+        <p class="page-subtitle mb-0">Draft your weekly output, trigger the agentic AI Proposal Coach for rubric verification, and submit for internal evaluation.</p>
+    </div>
+    <div class="d-flex gap-3">
+        <a href="{{ url_for('timeline') }}" class="btn btn-outline-dark px-3">
+            <i class="bi bi-calendar4-week me-2"></i> Timeline
+        </a>
+    </div>
+</div>
+
+<!-- Week Switcher Tabs -->
+<div class="mb-4">
+    <ul class="nav nav-pills bg-white p-2 rounded-3 border shadow-sm">
+        {% for num in [1, 2, 3, 4] %}
+        <li class="nav-item">
+            <a class="nav-link fw-semibold px-4 py-2 {% if num == week.week_number %}active{% endif %}" href="{{ url_for('submission_view', week_num=num) }}">
+                Week {{ num }} Output
+            </a>
+        </li>
+        {% endfor %}
+    </ul>
+</div>
+
+<div class="row g-4 align-items-stretch">
+    <!-- Left Column: Output Editor & Form -->
+    <div class="col-lg-7 d-flex flex-column">
+        <div class="card-custom mb-0 h-100 d-flex flex-column">
+            <div class="d-flex align-items-center justify-content-between mb-4 pb-3 border-bottom flex-shrink-0">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="badge bg-primary text-white px-2 py-1 fw-bold rounded-1">Editor</span>
+                    <h5 class="fw-bold mb-0 text-dark">Proposal Output Editor</h5>
+                </div>
+                <span class="status-pill {{ submission.status_badge_class }}">{{ submission.status }}</span>
+            </div>
+
+            <!-- Rubric Checklist Reminder -->
+            <div class="p-3 bg-light rounded-3 mb-4 border flex-shrink-0">
+                <div class="small fw-bold text-dark mb-2 d-flex align-items-center gap-2">
+                    <i class="bi bi-card-checklist text-primary"></i> Official Week {{ week.week_number }} Rubric Criteria:
+                </div>
+                <ul class="list-unstyled small text-secondary mb-0">
+                    {% for item in week.rubric_checklist %}
+                    <li class="mb-2 d-flex align-items-start gap-2">
+                        <i class="bi bi-check2 text-primary mt-1 flex-shrink-0"></i>
+                        <span>{{ item }}</span>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+
+            <form method="POST" action="{{ url_for('submission_view', week_num=week.week_number) }}" enctype="multipart/form-data" class="d-flex flex-column flex-grow-1">
+                <div class="mb-4 flex-shrink-0">
+                    <label class="form-label fw-bold small text-dark">Deliverable Title</label>
+                    <input type="text" id="submissionTitle" name="title" class="form-control" value="{{ submission.title or '' }}" required>
+                </div>
+
+                <div class="mb-4 flex-shrink-0">
+                    <label class="form-label fw-bold small text-dark">Executive Summary</label>
+                    <textarea id="submissionSummary" name="executive_summary" class="form-control" rows="4" placeholder="High-level executive summary of your team's output for this week...">{{ submission.executive_summary or '' }}</textarea>
+                </div>
+
+                <div class="mb-4 flex-grow-1 d-flex flex-column">
+                    <label class="form-label fw-bold small text-dark">Proposal Content & Technical Synthesis</label>
+                    <textarea id="submissionContent" name="content" class="form-control font-monospace flex-grow-1" rows="16" style="font-size: 0.92rem; line-height: 1.6; min-height: 280px;" placeholder="Write detailed research findings, benchmarking matrices, architectures, and evidence here (Markdown supported)...">{{ submission.content or '' }}</textarea>
+                </div>
+
+                <div class="mb-4 p-3 bg-light rounded-3 border flex-shrink-0">
+                    <label class="form-label fw-bold small text-dark">Document Attachment (PDF, Presentation Deck, or Appendix)</label>
+                    <input type="file" name="attachment_file" class="form-control mb-2">
+                    {% if submission.file_attachment_name %}
+                    <div class="small text-success">
+                        <i class="bi bi-paperclip me-1"></i> Currently attached: 
+                        <a href="{{ submission.file_attachment_path }}" target="_blank" class="fw-bold text-success">{{ submission.file_attachment_name }}</a>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 pt-4 border-top mt-auto flex-shrink-0">
+                    <!-- Trigger AI Coach Button -->
+                    <button type="button" id="btnRunAICoach" data-submission-id="{{ submission.id }}" class="btn btn-ai-coach pulse-glow px-4 py-2">
+                        <i class="bi bi-stars me-2"></i>Get AI Feedback (Proposal Coach)
+                    </button>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" name="action" value="save_draft" class="btn btn-outline-secondary px-3">
+                            <i class="bi bi-save me-1"></i> Save Draft
+                        </button>
+                        <button type="submit" name="action" value="final_submit" class="btn btn-success fw-bold px-4 shadow-sm">
+                            <i class="bi bi-send-check me-1"></i> Final Submit
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Right Column: AI Proposal Coach Agent Results Drawer -->
+    <div class="col-lg-5 d-flex flex-column">
+        <div class="ai-coach-card h-100 d-flex flex-column">
+            <div class="d-flex align-items-center justify-content-between mb-3 border-bottom border-secondary border-opacity-50 pb-3 flex-shrink-0">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="badge bg-info text-dark fw-bold px-2 py-1">Agentic Layer</span>
+                    <h5 class="fw-bold mb-0 text-white">Discover Proposal Coach</h5>
+                </div>
+                <span class="text-info small"><i class="bi bi-robot me-1"></i>Gemini Tool Loop</span>
+            </div>
+
+            <!-- Scrollable Coach Content -->
+            <div class="ai-coach-body">
+                <!-- Loading State -->
+                <div id="aiLoadingState" style="display: none;" class="text-center py-5">
+                    <div class="spinner-grow text-info mb-3" style="width: 3.5rem; height: 3.5rem;" role="status"></div>
+                    <h6 class="text-white fw-bold">Proposal Coach is evaluating your draft...</h6>
+                    <p class="text-light text-opacity-75 small mb-0">Executing multi-turn tools: fetching week rubric &rarr; inspecting draft &rarr; scoring readiness &rarr; flagging missing sections.</p>
+                </div>
+
+                <!-- Empty State -->
+                <div id="aiEmptyState" {% if ai_feedback %}style="display: none;"{% endif %} class="text-center py-5">
+                    <i class="bi bi-stars text-info display-4 mb-3 d-block"></i>
+                    <h5 class="text-white fw-bold mb-2">No AI Evaluation Generated Yet</h5>
+                    <p class="text-light text-opacity-75 small mb-0">
+                        Click <strong>"Get AI Feedback"</strong> to run the Proposal Coach agentic loop against the official Week {{ week.week_number }} rubric.
+                    </p>
+                </div>
+
+                <!-- Results Container -->
+                <div id="aiResultsContainer" {% if not ai_feedback %}style="display: none;"{% endif %}>
+                    <!-- Readiness Score Gauge -->
+                    <div class="readiness-gauge mb-4">
+                        <div class="text-light text-opacity-75 small fw-bold text-uppercase tracking-wider mb-2">Suggested Readiness Score</div>
+                        <div class="readiness-score-number mb-2" id="aiReadinessScore">{{ ai_feedback.readiness_score if ai_feedback else 0 }}<span style="font-size: 1.4rem; font-weight: 500; color: #94A3B8;"> / 100</span></div>
+                        <div class="progress" style="height: 12px; background: rgba(255,255,255,0.15); border-radius: 6px;">
+                            <div id="aiReadinessProgressBar" class="progress-bar {% if ai_feedback and ai_feedback.readiness_score >= 85 %}bg-success{% elif ai_feedback and ai_feedback.readiness_score >= 65 %}bg-warning{% else %}bg-danger{% endif %}" role="progressbar" style="width: {{ ai_feedback.readiness_score if ai_feedback else 0 }}%;"></div>
+                        </div>
+                    </div>
+
+                    <!-- Natural Language Coach Summary -->
+                    <div class="p-3 rounded-3 mb-4" style="background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.1);">
+                        <div class="small fw-bold text-info mb-1"><i class="bi bi-chat-quote me-1"></i> Coach Summary:</div>
+                        <p class="small text-light text-opacity-90 mb-0 lh-base" id="aiSummaryText">
+                            {{ ai_feedback.raw_summary if ai_feedback else '' }}
+                        </p>
+                    </div>
+
+                    <!-- Strengths -->
+                    <div class="mb-4">
+                        <div class="small fw-bold text-white mb-2 d-flex align-items-center gap-2">
+                            <i class="bi bi-check-circle-fill text-success"></i> Identified Strengths:
+                        </div>
+                        <ul class="list-unstyled small mb-0" id="aiStrengthsList">
+                            {% if ai_feedback %}
+                            {% for s in ai_feedback.strengths %}
+                            <li class="ai-coach-list-item text-success">
+                                <i class="bi bi-check-circle-fill mt-1 flex-shrink-0"></i>
+                                <span>{{ s }}</span>
+                            </li>
+                            {% endfor %}
+                            {% endif %}
+                        </ul>
+                    </div>
+
+                    <!-- Gaps -->
+                    <div class="mb-4">
+                        <div class="small fw-bold text-white mb-2 d-flex align-items-center gap-2">
+                            <i class="bi bi-exclamation-triangle-fill text-warning"></i> Rubric Gaps:
+                        </div>
+                        <ul class="list-unstyled small mb-0" id="aiGapsList">
+                            {% if ai_feedback %}
+                            {% for g in ai_feedback.gaps %}
+                            <li class="ai-coach-list-item text-warning">
+                                <i class="bi bi-exclamation-triangle-fill mt-1 flex-shrink-0"></i>
+                                <span>{{ g }}</span>
+                            </li>
+                            {% endfor %}
+                            {% endif %}
+                        </ul>
+                    </div>
+
+                    <!-- Flagged Missing Section To-Do Items -->
+                    <div class="mb-4">
+                        <div class="small fw-bold text-white mb-2 d-flex align-items-center gap-2">
+                            <i class="bi bi-flag-fill text-warning"></i> Actionable Rubric To-Dos:
+                        </div>
+                        <div id="aiTodosContainer">
+                            {% if todos %}
+                            {% for todo in todos %}
+                            <div class="card bg-dark border-secondary border-opacity-50 mb-2 p-3 rounded-2">
+                                <div class="d-flex align-items-start gap-3">
+                                    <input type="checkbox" class="form-check-input mt-1 todo-checkbox" data-todo-id="{{ todo.id }}" {% if todo.is_resolved %}checked{% endif %}>
+                                    <div>
+                                        <strong class="text-white small {% if todo.is_resolved %}text-decoration-line-through text-muted{% endif %}" id="todo-label-{{ todo.id }}">{{ todo.section_name }}</strong>
+                                        <p class="text-secondary small mb-0 mt-1">{{ todo.prompt_for_student }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                            {% else %}
+                            <p class="text-success small mb-0"><i class="bi bi-check-all me-1"></i>All rubric criteria addressed!</p>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Suggested Next Steps -->
+                    <div>
+                        <div class="small fw-bold text-white mb-2 d-flex align-items-center gap-2">
+                            <i class="bi bi-arrow-right-circle text-info"></i> Recommended Next Steps:
+                        </div>
+                        <ul class="list-unstyled small mb-0" id="aiNextStepsList">
+                            {% if ai_feedback %}
+                            {% for step in ai_feedback.suggested_next_steps %}
+                            <li class="ai-coach-list-item text-light">
+                                <i class="bi bi-arrow-right-circle text-info mt-1 flex-shrink-0"></i>
+                                <span>{{ step }}</span>
+                            </li>
+                            {% endfor %}
+                            {% endif %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

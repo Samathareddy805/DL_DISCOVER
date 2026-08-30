@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+
+{% block title %}Assigned Project & Company Problem - DegreeLabs Discover{% endblock %}
+
+{% block content %}
+<div class="page-header d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+    <div>
+        <div class="d-flex align-items-center gap-2 mb-2">
+            <span class="badge bg-dark text-white px-2.5 py-1.5">Assigned Company Project</span>
+            <span class="badge bg-warning text-dark"><i class="bi bi-lock-fill me-1"></i>Non-Elective Assignment</span>
+        </div>
+        <h1 class="page-title mb-1">{{ project.title }}</h1>
+        <p class="page-subtitle mb-0">Direct industry challenge provided by {{ project.company.name }}. In Discover, students are matched directly with enterprise challenges.</p>
+    </div>
+    <div>
+        <a href="{{ url_for('timeline') }}" class="btn btn-outline-dark fw-semibold text-nowrap">
+            <i class="bi bi-calendar4-week me-1"></i> Program Roadmap
+        </a>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Main Problem Details -->
+    <div class="col-lg-8">
+        <!-- Problem Statement Card -->
+        <div class="card-custom mb-4">
+            <div class="d-flex align-items-center gap-2 mb-3">
+                <i class="bi bi-exclamation-octagon-fill text-danger fs-5"></i>
+                <h5 class="fw-bold mb-0 text-dark">Core Business Problem Statement</h5>
+            </div>
+            <div class="p-3 bg-light rounded-3 border-start border-4 border-danger">
+                <p class="text-dark mb-0 lh-base" style="white-space: pre-line;">
+                    {{ project.problem_statement }}
+                </p>
+            </div>
+        </div>
+
+        <!-- Project Scope & Deliverable Workstreams -->
+        <div class="card-custom mb-4">
+            <div class="d-flex align-items-center gap-2 mb-3">
+                <i class="bi bi-list-check text-primary fs-5"></i>
+                <h5 class="fw-bold mb-0 text-dark">4-Week Discover Scope Boundaries</h5>
+            </div>
+            <div class="p-3 bg-light rounded-3 border-start border-4 border-primary">
+                <div class="text-dark lh-base" style="white-space: pre-line;">
+                    {{ project.scope_summary }}
+                </div>
+            </div>
+        </div>
+
+        <!-- Technical & Business Constraints -->
+        <div class="card-custom">
+            <div class="d-flex align-items-center gap-2 mb-3">
+                <i class="bi bi-shield-check text-warning fs-5"></i>
+                <h5 class="fw-bold mb-0 text-dark">Enterprise Constraints & Success Criteria</h5>
+            </div>
+            <div class="row g-3">
+                <div class="col-md-6 d-flex">
+                    <div class="p-3 border rounded-3 bg-light w-100 d-flex flex-column">
+                        <div class="fw-bold text-dark small mb-2 d-flex align-items-center gap-2">
+                            <i class="bi bi-cpu text-primary"></i> Technical / SLA Constraints
+                        </div>
+                        <p class="text-muted small mb-0 flex-grow-1 lh-base">{{ project.business_constraints }}</p>
+                    </div>
+                </div>
+                <div class="col-md-6 d-flex">
+                    <div class="p-3 border rounded-3 bg-light w-100 d-flex flex-column">
+                        <div class="fw-bold text-dark small mb-2 d-flex align-items-center gap-2">
+                            <i class="bi bi-people text-success"></i> Target Enterprise Stakeholders
+                        </div>
+                        <p class="text-muted small mb-0 flex-grow-1 lh-base">{{ project.target_audience }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Sidebar: Company Profile & Team Assignment -->
+    <div class="col-lg-4">
+        <!-- Company Profile Card -->
+        <div class="card-custom mb-4">
+            <div class="text-center pb-3 border-bottom mb-3">
+                <div class="d-flex justify-content-center mb-2">
+                    <img src="{{ project.company.logo_url }}" class="rounded-3 border shadow-sm" style="width: 80px; height: 80px; object-fit: cover;" alt="Company Logo">
+                </div>
+                <h5 class="fw-bold mb-1 text-dark">{{ project.company.name }}</h5>
+                <div class="d-flex justify-content-center my-2">
+                    <span class="badge bg-light text-dark border text-wrap lh-base text-center" style="max-width: 100%;">{{ project.company.industry }}</span>
+                </div>
+                {% if project.company.website %}
+                <div>
+                    <a href="{{ project.company.website }}" target="_blank" class="small text-muted text-decoration-none d-inline-flex align-items-center gap-1">
+                        <i class="bi bi-link-45deg"></i> <span class="text-truncate" style="max-width: 220px;">{{ project.company.website }}</span>
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+
+            <h6 class="fw-bold text-dark small mb-2">Company Overview</h6>
+            <p class="text-muted small lh-base mb-3">
+                {{ project.company.description }}
+            </p>
+
+            <div class="alert alert-info py-2 px-3 small mb-0 d-flex align-items-start gap-2 rounded-3">
+                <i class="bi bi-info-circle-fill mt-1 flex-shrink-0"></i>
+                <div class="lh-sm">
+                    <strong>Evaluation Pipeline:</strong> Internal DegreeLabs evaluators shortlist outputs before anything is shown to company reviewers.
+                </div>
+            </div>
+        </div>
+
+        <!-- Assigned Team Card -->
+        <div class="card-custom">
+            <h6 class="fw-bold text-dark mb-3 d-flex align-items-center gap-2">
+                <i class="bi bi-people-fill text-primary"></i> Assigned 5-Member Team
+            </h6>
+            <div class="p-3 bg-light rounded-3 mb-3 border">
+                <div class="fw-bold text-primary mb-1">{{ team.name if team else "Nexus Dynamics" }}</div>
+                <div class="small text-muted d-flex align-items-center gap-2 flex-wrap">
+                    <span><i class="bi bi-mortarboard me-1"></i>Discover Cohort 2026</span>
+                    <span>&bull;</span>
+                    <span class="badge bg-primary text-white">Week {{ team.current_week if team else 2 }}</span>
+                </div>
+            </div>
+
+            <a href="{{ url_for('team_workspace') }}" class="btn btn-outline-primary w-100 fw-semibold d-flex align-items-center justify-content-center gap-2">
+                <i class="bi bi-people"></i> Open Team Workspace
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

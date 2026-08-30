@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+
+{% block title %}Company Reviewer - Shortlisted Proposals - DegreeLabs Discover{% endblock %}
+
+{% block content %}
+<div class="page-header d-flex flex-wrap align-items-center justify-content-between gap-4 mb-4">
+    <div>
+        <div class="d-flex align-items-center gap-2 mb-2">
+            <span class="badge bg-warning text-dark px-3 py-2 rounded-pill fw-semibold"><i class="bi bi-building me-1"></i>Company Reviewer Portal</span>
+            <span class="text-muted small">&bull; {{ company.name }}</span>
+        </div>
+        <h1 class="page-title mb-1">Enterprise Shortlist & Selection</h1>
+        <p class="page-subtitle mb-0">Review vetted, internally-evaluated student team proposals and select exactly one winning proposal to proceed to Phase 2 (Validate).</p>
+    </div>
+</div>
+
+<!-- Company Project Header Card -->
+<div class="card-custom mb-5 p-4" style="background: linear-gradient(90deg, #F8FAFC 0%, #EFF6FF 100%);">
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-4">
+        <div class="d-flex align-items-center gap-4">
+            <img src="{{ company.logo_url }}" class="rounded-3 border shadow-sm" style="width: 72px; height: 72px; object-fit: cover;" alt="Company Logo">
+            <div>
+                <span class="badge bg-dark text-white mb-2 px-2 py-1">{{ company.name }} &bull; {{ company.industry }}</span>
+                <h4 class="fw-bold mb-1 text-dark">{{ project.title }}</h4>
+                <p class="text-muted small mb-0 lh-base">{{ project.problem_statement[:200] }}...</p>
+            </div>
+        </div>
+        <div>
+            <span class="badge bg-success text-white px-4 py-2 fs-6 shadow-sm">
+                <i class="bi bi-shield-check me-1"></i> Quality Gate Passed
+            </span>
+        </div>
+    </div>
+</div>
+
+<!-- Shortlisted Proposals -->
+<div class="card-custom">
+    <div class="d-flex align-items-center justify-content-between mb-4 pb-2 border-bottom">
+        <div>
+            <h5 class="fw-bold mb-1">Shortlisted Candidate Proposals</h5>
+            <span class="text-muted small">Only proposals shortlisted by DegreeLabs Academic & Industry Directors appear here.</span>
+        </div>
+        <span class="badge bg-primary px-3 py-2">{{ shortlisted_submissions|length }} Proposals Shortlisted</span>
+    </div>
+
+    {% if shortlisted_submissions %}
+    <div class="row g-4">
+        {% for sub in shortlisted_submissions %}
+        <div class="col-lg-12">
+            <div class="p-4 border rounded-3 bg-white shadow-sm position-relative {% if sub.is_final_selected %}border-success border-3 bg-success bg-opacity-10{% endif %}">
+                <div class="d-flex flex-wrap align-items-center justify-content-between gap-4 mb-4 pb-3 border-bottom">
+                    <div>
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <span class="badge bg-dark px-2 py-1">Week {{ sub.week_number }}</span>
+                            <span class="badge bg-success text-white px-2 py-1"><i class="bi bi-check-circle-fill me-1"></i>Internally Shortlisted</span>
+                            {% if sub.is_final_selected %}
+                            <span class="badge bg-success text-white px-3 py-1 fs-6"><i class="bi bi-trophy-fill me-1"></i>SELECTED FOR PHASE 2 (VALIDATE)</span>
+                            {% endif %}
+                        </div>
+                        <h4 class="fw-bold text-dark mb-1">{{ sub.title }}</h4>
+                        <div class="text-muted small">Team: <strong>{{ sub.team.name }}</strong> &bull; Mentor: <strong>{{ sub.team.mentor.full_name }}</strong></div>
+                    </div>
+
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="text-center p-3 rounded-3 bg-light border shadow-sm">
+                            <div class="text-muted small fw-bold text-uppercase" style="font-size:0.7rem;">Evaluator Score</div>
+                            <div class="h4 fw-bold text-primary mb-0">{{ sub.human_evaluation.score if sub.human_evaluation else 90 }} / 100</div>
+                        </div>
+                        <div class="text-center p-3 rounded-3 bg-light border shadow-sm">
+                            <div class="text-muted small fw-bold text-uppercase" style="font-size:0.7rem;">AI Coach Readiness</div>
+                            <div class="h4 fw-bold text-info mb-0">{{ sub.ai_feedback.readiness_score if sub.ai_feedback else 92 }} / 100</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <h6 class="fw-bold text-dark small mb-2">Executive Summary:</h6>
+                    <p class="text-dark small lh-lg mb-2">{{ sub.executive_summary or 'Summary available in full proposal.' }}</p>
+                </div>
+
+                <div class="p-4 bg-light rounded-3 mb-4 border">
+                    <h6 class="fw-bold text-dark small mb-2">Proposal Overview & Approach:</h6>
+                    <div class="small text-muted font-monospace lh-base" style="max-height: 180px; overflow-y: auto; white-space: pre-line;">
+                        {{ sub.content }}
+                    </div>
+                </div>
+
+                {% if sub.human_evaluation and sub.human_evaluation.recommendation_notes %}
+                <div class="alert alert-primary p-3 small mb-4 border-0 shadow-sm">
+                    <strong>DegreeLabs Evaluator Recommendation:</strong> {{ sub.human_evaluation.recommendation_notes }}
+                </div>
+                {% endif %}
+
+                {% if sub.file_attachment_name %}
+                <div class="mb-4">
+                    <a href="{{ sub.file_attachment_path }}" target="_blank" class="btn btn-sm btn-outline-dark px-3 py-2">
+                        <i class="bi bi-file-earmark-pdf text-danger me-2"></i> Download Deliverable Document ({{ sub.file_attachment_name }})
+                    </a>
+                </div>
+                {% endif %}
+
+                <!-- Selection Action Form -->
+                <div class="pt-3 border-top d-flex flex-wrap align-items-center justify-content-between gap-3">
+                    <div class="text-muted small">
+                        <i class="bi bi-info-circle me-1"></i> Exactly one proposal proceeds to the 4-week Validate phase.
+                    </div>
+
+                    {% if not sub.is_final_selected %}
+                    <form method="POST" action="{{ url_for('company_select_proposal', submission_id=sub.id) }}">
+                        <input type="hidden" name="company_feedback" value="Selected by Aurex Retail Strategy Panel. Outstanding problem framing and data modeling roadmap.">
+                        <button type="submit" class="btn btn-success fw-bold px-4 py-2 shadow-sm">
+                            <i class="bi bi-check-circle-fill me-2"></i> Select This Proposal as Winner
+                        </button>
+                    </form>
+                    {% else %}
+                    <div class="btn btn-success disabled fw-bold px-4 py-2 shadow-sm">
+                        <i class="bi bi-check-all me-2"></i> Selected Winner (Advancing to Validate Wks 5–8)
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="text-center py-5 text-muted">
+        <i class="bi bi-hourglass-split display-4"></i>
+        <h5 class="mt-3 fw-bold text-dark">No Shortlisted Proposals Yet</h5>
+        <p class="small text-muted mb-0">Student teams are currently drafting outputs. Once DegreeLabs evaluators review and shortlist proposals, they will appear here for company selection.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

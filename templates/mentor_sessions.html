@@ -1,0 +1,203 @@
+{% extends "base.html" %}
+
+{% block title %}Mentor Availability & Sessions - DegreeLabs Discover{% endblock %}
+
+{% block content %}
+<div class="page-header d-flex flex-wrap align-items-center justify-content-between gap-4 mb-4">
+    <div>
+        <div class="d-flex align-items-center gap-2 mb-2">
+            <span class="badge bg-primary text-white px-3 py-2 rounded-pill fw-semibold">On-Platform Mentorship</span>
+            <span class="text-muted small">&bull; Team Engagement Space</span>
+        </div>
+        <h1 class="page-title mb-1">Mentor Availability & Session Requests</h1>
+        <p class="page-subtitle mb-0">Book dedicated 1-on-1 mentorship sessions. All advisory discussions and notes are administered on-platform.</p>
+    </div>
+    <div>
+        {% if current_user.is_mentor or current_user.is_evaluator %}
+        <button class="btn btn-primary px-4 shadow-sm" data-bs-toggle="modal" data-bs-target="#newSlotModal">
+            <i class="bi bi-plus-circle me-2"></i> Declare Availability Slot
+        </button>
+        {% endif %}
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Left Column: Available Mentor Slots & Booking -->
+    <div class="col-lg-7">
+        <div class="card-custom mb-4">
+            <div class="d-flex align-items-center justify-content-between mb-4 pb-2 border-bottom">
+                <h5 class="fw-bold mb-0 d-flex align-items-center gap-2">
+                    <i class="bi bi-calendar3 text-primary"></i> Declared Mentor Availability Slots
+                </h5>
+                <span class="badge bg-light text-dark border px-3 py-2">{{ slots|length }} Slots Listed</span>
+            </div>
+
+            {% if slots %}
+            <div class="list-group list-group-flush">
+                {% for slot in slots %}
+                <div class="list-group-item px-0 py-4 border-bottom d-flex flex-wrap align-items-center justify-content-between gap-4">
+                    <div>
+                        <div class="fw-bold text-dark fs-5 mb-1">{{ slot.start_time }} &ndash; {{ slot.end_time.split(' - ')[-1] }}</div>
+                        <div class="text-muted small d-flex align-items-center gap-2">
+                            <i class="bi bi-person-circle text-primary"></i>
+                            <span>{{ slot.mentor.full_name }} ({{ slot.mentor.discipline }})</span>
+                        </div>
+                    </div>
+                    <div>
+                        {% if slot.is_booked %}
+                        <span class="badge bg-secondary text-white py-2 px-3 rounded-pill"><i class="bi bi-lock-fill me-1"></i> Booked</span>
+                        {% else %}
+                        {% if current_user.is_student %}
+                        <button class="btn btn-primary btn-sm px-3 py-2 fw-semibold shadow-sm" data-bs-toggle="modal" data-bs-target="#bookSlotModal{{ slot.id }}">
+                            <i class="bi bi-calendar-plus me-1"></i> Request Session
+                        </button>
+                        {% else %}
+                        <span class="badge bg-success text-white py-2 px-3 rounded-pill"><i class="bi bi-check-circle me-1"></i> Open for Booking</span>
+                        {% endif %}
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Booking Modal for this Slot -->
+                {% if not slot.is_booked and current_user.is_student %}
+                <div class="modal fade" id="bookSlotModal{{ slot.id }}" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content border-0 shadow-lg" style="border-radius: 16px;">
+                            <div class="modal-header border-bottom pb-3">
+                                <h5 class="modal-title fw-bold"><i class="bi bi-calendar-event me-2 text-primary"></i>Request Mentorship Slot</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <form method="POST" action="{{ url_for('book_mentor_slot') }}">
+                                <input type="hidden" name="slot_id" value="{{ slot.id }}">
+                                <div class="modal-body p-4">
+                                    <div class="p-3 bg-light rounded-3 mb-4 border">
+                                        <div class="fw-bold text-dark fs-6 mb-1">{{ slot.start_time }}</div>
+                                        <div class="small text-muted">With {{ slot.mentor.full_name }}</div>
+                                    </div>
+
+                                    <div class="mb-4">
+                                        <label class="form-label fw-bold small text-dark">Session Discussion Topic</label>
+                                        <input type="text" name="topic" class="form-control" placeholder="e.g. Reviewing Week 2 candidate architecture trade-offs" required>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold small text-dark">Specific Questions / Agenda</label>
+                                        <textarea name="agenda_notes" class="form-control" rows="4" placeholder="List 2-3 specific questions or data points your team wants guidance on..."></textarea>
+                                    </div>
+                                </div>
+                                <div class="modal-footer border-top pt-3">
+                                    <button type="button" class="btn btn-secondary px-3" data-bs-dismiss="modal">Cancel</button>
+                                    <button type="submit" class="btn btn-primary px-4 fw-bold shadow-sm">Submit Booking Request</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center py-5 text-muted">
+                <i class="bi bi-calendar-x fs-2"></i>
+                <p class="small mt-2 mb-0">No open availability slots declared yet.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Right Column: Requests & Action Queue -->
+    <div class="col-lg-5">
+        <div class="card-custom">
+            <h5 class="fw-bold mb-4 pb-2 border-bottom d-flex align-items-center gap-2">
+                <i class="bi bi-chat-left-text text-primary"></i> Mentorship Requests & Log
+            </h5>
+
+            {% if requests %}
+            <div class="list-group list-group-flush">
+                {% for req in requests %}
+                <div class="list-group-item px-0 py-3 border-bottom">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <span class="badge {% if req.status == 'accepted' %}bg-success{% elif req.status == 'declined' %}bg-danger{% else %}bg-warning text-dark{% endif %} px-2 py-1">
+                            {{ req.status.upper() }}
+                        </span>
+                        <span class="text-muted small">{{ req.slot.start_time if req.slot else 'Scheduled Slot' }}</span>
+                    </div>
+
+                    <h6 class="fw-bold text-dark mb-1 fs-6">{{ req.topic }}</h6>
+                    <p class="text-muted small mb-3 lh-base">{{ req.agenda_notes or 'No additional agenda notes provided.' }}</p>
+
+                    {% if req.mentor_notes %}
+                    <div class="p-3 bg-light rounded-3 border-start border-4 border-primary mb-3">
+                        <span class="small fw-bold text-primary">Mentor Guidance:</span>
+                        <p class="text-dark small mb-0 mt-1 lh-base">{{ req.mentor_notes }}</p>
+                    </div>
+                    {% endif %}
+
+                    {% if req.status == 'accepted' %}
+                    <div class="mt-2">
+                        <a href="{{ req.meeting_link }}" target="_blank" class="btn btn-sm btn-outline-primary fw-semibold">
+                            <i class="bi bi-camera-video me-1"></i> Join Engagement Space
+                        </a>
+                    </div>
+                    {% endif %}
+
+                    <!-- Mentor Accept / Decline Controls -->
+                    {% if (current_user.is_mentor or current_user.is_evaluator) and req.status == 'pending' %}
+                    <div class="mt-3 p-3 bg-light rounded-3 border">
+                        <div class="small fw-bold text-dark mb-2">Mentor Action:</div>
+                        <form method="POST" action="{{ url_for('respond_mentor_request', req_id=req.id) }}">
+                            <div class="mb-3">
+                                <input type="text" name="mentor_notes" class="form-control form-control-sm" placeholder="Add preparation guidance for the team...">
+                            </div>
+                            <div class="d-flex gap-2">
+                                <button type="submit" name="action" value="accept" class="btn btn-sm btn-success fw-bold flex-grow-1">
+                                    <i class="bi bi-check-lg me-1"></i> Accept Request
+                                </button>
+                                <button type="submit" name="action" value="decline" class="btn btn-sm btn-outline-danger fw-semibold">
+                                    <i class="bi bi-x-lg me-1"></i> Decline
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center py-5 text-muted">
+                <i class="bi bi-inbox fs-2"></i>
+                <p class="small mt-2 mb-0">No session requests logged.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Mentor Declare New Availability Slot -->
+<div class="modal fade" id="newSlotModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 16px;">
+            <div class="modal-header border-bottom pb-3">
+                <h5 class="modal-title fw-bold"><i class="bi bi-calendar-plus me-2 text-primary"></i>Declare Availability Slot</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="POST" action="{{ url_for('create_mentor_slot') }}">
+                <div class="modal-body p-4">
+                    <div class="mb-4">
+                        <label class="form-label fw-bold small text-dark">Slot Start Time</label>
+                        <input type="text" name="start_time" class="form-control" placeholder="e.g. Wednesday, Sep 03 - 4:00 PM" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small text-dark">Slot End Time</label>
+                        <input type="text" name="end_time" class="form-control" placeholder="e.g. Wednesday, Sep 03 - 5:00 PM" required>
+                    </div>
+                </div>
+                <div class="modal-footer border-top pt-3">
+                    <button type="button" class="btn btn-secondary px-3" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary px-4 fw-bold shadow-sm">Publish Slot</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

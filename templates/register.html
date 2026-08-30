@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+
+{% block title %}Create Account - DegreeLabs Discover{% endblock %}
+
+{% block login_content %}
+
+<div class="min-vh-100 d-flex align-items-center justify-content-center py-5"
+    style="background: radial-gradient(circle at 10% 20%, #0B132B 0%, #1C2541 60%, #0A1128 100%);">
+
+    <div class="container" style="max-width: 600px;">
+
+        <div class="text-center mb-4 text-white">
+
+            <h1 class="display-6 fw-bold">
+                DegreeLabs <span class="text-info">Discover</span>
+            </h1>
+
+            <p class="text-light text-opacity-75">
+                Create your account
+            </p>
+
+        </div>
+
+        <div class="card border-0 shadow" style="border-radius: 14px;">
+
+            <div class="card-body p-4">
+
+                <h4 class="fw-bold mb-4">
+                    Create Account
+                </h4>
+
+                <form method="POST" action="{{ url_for('register') }}">
+
+                    <div class="mb-3">
+
+                        <label class="form-label">
+                            Full Name
+                        </label>
+
+                        <input type="text" name="full_name" class="form-control" placeholder="Enter your full name"
+                            required>
+
+                    </div>
+
+                    <div class="mb-3">
+
+                        <label class="form-label">
+                            Username
+                        </label>
+
+                        <input type="text" name="username" class="form-control" placeholder="Choose a username"
+                            required>
+
+                    </div>
+
+                    <div class="mb-3">
+
+                        <label class="form-label">
+                            Email
+                        </label>
+
+                        <input type="email" name="email" class="form-control" placeholder="Enter your email" required>
+
+                    </div>
+
+                    <div class="mb-4">
+
+                        <label class="form-label">
+                            Password
+                        </label>
+
+                        <input type="password" name="password" class="form-control" placeholder="Create a password"
+                            minlength="8" required>
+
+                    </div>
+
+                    <div class="alert alert-info small">
+                        New accounts are registered as Student accounts.
+                        Mentor, Evaluator, Company Reviewer and Admin
+                        accounts are created by an administrator.
+                    </div>
+
+                    <button type="submit" class="btn btn-dark w-100 fw-bold">
+
+                        Create Account
+
+                    </button>
+
+                </form>
+
+                <div class="text-center mt-3">
+
+                    <span class="text-muted">
+                        Already have an account?
+                    </span>
+
+                    <a href="{{ url_for('login') }}" class="fw-bold text-decoration-none">
+
+                        Sign In
+
+                    </a>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}
